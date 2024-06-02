@@ -1,0 +1,28 @@
+{
+    "name": "gilded",
+    "version": "1.0.0",
+    "description": "Gilded is a JS animation and styling library to add some shine to your website!",
+    "main": "build/index.js",
+    "author": "4Sight",
+    "license": "MIT",
+    "keywords": [
+        "animation",
+        "transition",
+        "motion"
+    ],
+    "scripts": {
+        "dev": "vite build --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/4S1ght/Gilded.git"
+    },
+    "bugs": {
+        "url": "https://github.com/4S1ght/Gilded/issues"
+    },
+    "homepage": "https://github.com/4S1ght/Gilded#readme",
+    "devDependencies": {
+        "typescript": "^5.4.5",
+        "vite": "^5.2.12"
+    }
+}

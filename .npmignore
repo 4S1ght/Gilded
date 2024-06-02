@@ -1,0 +1,5 @@
+.editorconfig
+.gitignore
+tsconfig.json
+vite.config.json
+src/
