@@ -5,6 +5,7 @@
     "main": "build/index.js",
     "author": "4Sight",
     "license": "MIT",
+    "type": "module",
     "keywords": [
         "animation",
         "transition",
