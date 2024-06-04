@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "Gilded is a JS animation and styling library to add some shine to your website!",
     "main": "build/index.js",
+    "types": "build/index.d.ts",
     "author": "4Sight",
     "license": "MIT",
     "type": "module",
@@ -24,6 +25,7 @@
     "homepage": "https://github.com/4S1ght/Gilded#readme",
     "devDependencies": {
         "typescript": "^5.4.5",
-        "vite": "^5.2.12"
+        "vite": "^5.2.12",
+        "vite-plugin-dts": "^3.9.1"
     }
 }

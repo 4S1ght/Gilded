@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
 
 export default defineConfig({
     build: {
@@ -12,8 +13,13 @@ export default defineConfig({
             external: [],
             output: {
                 dir: './build',
+                sourcemap: true,
                 globals: {}
             }
         }
-    }
+    },
+    plugins: [dts({
+        outDir: './build',
+        rollupTypes: true
+    })]
 });

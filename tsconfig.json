@@ -9,7 +9,7 @@
       "forceConsistentCasingInFileNames": true,
       "declaration": true,
       "outDir": "build",
-      "sourceMap": true
+      "sourceMap": false
     },
     "include": ["src"]
   }
