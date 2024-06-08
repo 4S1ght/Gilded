@@ -24,8 +24,6 @@
     },
     "homepage": "https://github.com/4S1ght/Gilded#readme",
     "devDependencies": {
-        "typescript": "^5.4.5",
-        "vite": "^5.2.12",
-        "vite-plugin-dts": "^3.9.1"
+        "typescript": "^5.4.5"
     }
 }
