@@ -274,6 +274,17 @@ class GildedInstance<E extends Element> {
         return this
     }
 
+    /**
+     * Toggles a class name on all selected elements.
+     * ```js
+     * g('button.class#id').toggleClass('my-class')
+     * ```
+     */
+    public toggleClass(className: string): this {
+        for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.toggle(className)
+        return this
+    }
+
     // ========================================
     // Events
     // ========================================
