@@ -2,18 +2,45 @@
 // Imports ====================================================================
 
 import * as math from './math.js'
+import * as timing from './timing.js'
 
 // Types ======================================================================
 
+// Selector value
 type TGildedSelectorValue = string
     | NodeList 
     | HTMLElementTagNameMap[keyof HTMLElementTagNameMap]
     | SVGElementTagNameMap[keyof SVGElementTagNameMap]
     | MathMLElementTagNameMap[keyof MathMLElementTagNameMap]
 
+// String query selector
 type TGildedSelector = TGildedSelectorValue | Array<TGildedSelectorValue>
 
+// Element selector
 type S<K extends Element> = K | K[] | NodeListOf<K>
+
+type CSSTransformFunction =
+  | 'translate'
+  | 'translateX'
+  | 'translateY'
+  | 'translateZ'
+  | 'translate3d'
+  | 'scale'
+  | 'scaleX'
+  | 'scaleY'
+  | 'scaleZ'
+  | 'scale3d'
+  | 'rotate'
+  | 'rotateX'
+  | 'rotateY'
+  | 'rotateZ'
+  | 'rotate3d'
+  | 'skew'
+  | 'skewX'
+  | 'skewY'
+  | 'matrix'
+  | 'matrix3d'
+  | 'perspective'
 
 
 // Static =====================================================================
@@ -21,7 +48,7 @@ type S<K extends Element> = K | K[] | NodeListOf<K>
 /**
  * Gilded API entry point.  
  * Holds all the statically accessible library methods, grouped under their respective categories.
- * Returns a class instance with DOM manipulation methods when called,
+ * Returns a class instance with DOM manipulation methods when called.
  * ```js
  * // Access a static method
  * g.m.rand(1, 100)
@@ -169,39 +196,33 @@ g.m = {
 // Timing & animation
 // ========================================
 
-// easeOutElastic
-const c4 = (2 * Math.PI) / 3
-// easeOutBounce
-const n1 = 7.5625
-const d1 = 2.75
-
-/** Holds a list of predefined animation timing functions. */
+/** Holds a list of ready to use animation timing functions. */
 g.f = {
 
-    easeInQuad: (t: number) =>  t*t,
-    easeInCubic: (t: number) => t*t*t,
-    easeInQuart: (t: number) => t*t*t*t,
-    easeInQuint: (t: number) => t*t*t*t*t,
-    easeInCirc: (t: number) =>  1 - Math.sqrt(1 - Math.pow(t, 2)),
-    easeInExpo: (t: number) =>  t === 0 ? 0 : Math.pow(2, 10 * t - 10),
+    easeInQuad: timing.easeInQuad,
+    easeInCubic: timing.easeInCubic,
+    easeInQuart: timing.easeInQuart,
+    easeInQuint: timing.easeInQuint,
+    easeInCirc: timing.easeInCirc,
+    easeInExpo: timing.easeInExpo,
 
-    easeOutQuad: (t: number) =>  t*(2-t),
-    easeOutCubic: (t: number) => (--t)*t*t+1,
-    easeOutQuart: (t: number) => 1-(--t)*t*t*t,
-    easeOutQuint: (t: number) => 1+(--t)*t*t*t*t,
-    easeOutCirc: (t: number) =>  Math.sqrt(1 - Math.pow(t - 1, 2)),
-    easeOutExpo: (t: number) =>  t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
-    
-    easeInOutQuad: (t: number) =>  t<.5 ? 2*t*t : -1+(4-2*t)*t,
-    easeInOutCubic: (t: number) => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
-    easeInOutQuart: (t: number) => t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t,
-    easeInOutQuint: (t: number) => t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t,
-    easeInOutCirc: (t: number) =>  t<.5 ?(1-Math.sqrt(1-Math.pow(2*t,2)))/2 : (Math.sqrt(1-Math.pow(-2*t+2,2))+1)/2,
-    easeInOutExpo: (t: number) =>  t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2,
+    easeOutQuad: timing.easeOutQuad,
+    easeOutCubic: timing.easeOutCubic,
+    easeOutQuart: timing.easeOutQuart,
+    easeOutQuint: timing.easeOutQuint,
+    easeOutCirc: timing.easeOutCirc,
+    easeOutExpo: timing.easeOutExpo,
 
-    easeOutElastic: (t: number) => t === 0 ? 0 : t === 1? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1,
-    easeOutBounce: (t: number) =>  t < 1/d1 ? n1*t*t : t<2/d1?n1*(t-=1.5/d1)*t+.75 : t<2.5/d1?n1*(t-=2.25/d1)*t+.9375 : n1*(t-=2.625/d1)*t+.984375
-    
+    easeInOutQuad: timing.easeInOutQuad,
+    easeInOutCubic: timing.easeInOutCubic,
+    easeInOutQuart: timing.easeInOutQuart,
+    easeInOutQuint: timing.easeInOutQuint,
+    easeInOutCirc: timing.easeInOutCirc,
+    easeInOutExpo: timing.easeInOutExpo,
+
+    easeOutElastic: timing.easeOutElastic,
+    easeOutBounce: timing.easeOutBounce
+
 }
 
 
@@ -247,6 +268,17 @@ class GildedInstance<E extends Element> {
                 : { done: true }
         }
     }
+    
+    /**
+     * Performs the specified action for each selected element. 
+     * Direct alias to `Array.forEach`.
+     * @param callback 
+     * @returns 
+     */
+    forEach(callback: (value: E, index: number, array: E[]) => any): this {
+        this.#items.forEach(callback)
+        return this
+    }
 
     // ========================================
     // Class manipulation 
@@ -258,7 +290,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').addClass('my-class')
      * ```
      */
-    public addClass(className: string | string[]): this {
+    addClass(className: string | string[]): this {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.add(...className)
         return this
     }
@@ -269,7 +301,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').removeClass('my-class')
      * ```
      */
-    public removeClass(className: string | string[]): this {
+    removeClass(className: string | string[]): this {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.add(...className)
         return this
     }
@@ -280,7 +312,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').toggleClass('my-class')
      * ```
      */
-    public toggleClass(className: string): this {
+    toggleClass(className: string): this {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.toggle(className)
         return this
     }
@@ -297,37 +329,75 @@ class GildedInstance<E extends Element> {
      * g('.itemClass').on(['mouseenter', 'mouseleave'], (e) => ...)
      * ```
      */
-    public on(event: string | string[], callback: (e: Event) => void) {
+    on(event: string | string[], callback: (e: Event) => void): this {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
             event.forEach(e => {
                 item.addEventListener(e, callback)
             })
         })
+        return this
     }
 
     /**
      * Removes one or more event listeners to all selected elements.
      * ```js
      * g('.itemClass').off('click', callback)
-     * ```
-     * Or
-     * ```js
+     * // or
      * g('.itemClass').off(['mouseenter', 'mouseleave'], callback)
      * ```
      */
-    public off(event: string | string[], callback: (e: Event) => void) {
+    off(event: string | string[], callback: (e: Event) => void): this {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
             event.forEach(e => {
                 item.removeEventListener(e, callback)
             })
         })
+        return this
     }
 
     // ========================================
     // CSS 
     // ========================================
+
+    #transforms: Record<CSSTransformFunction, (s: string, v: string | number) => string> = {
+
+        translate:      (s: string, v: string|number) => { if (!s.match(/translate/i))   s += 'translate()';   s = s.replace(/translate\((.*)\)/gmi,   `translate(${v})`);   return s; },
+        translateX:     (s: string, v: string|number) => { if (!s.match(/translateX/i))  s += 'translateX()';  s = s.replace(/translateX\((.*)\)/gmi,  `translateX(${v})`);  return s; },
+        translateY:     (s: string, v: string|number) => { if (!s.match(/translateY/i))  s += 'translateY()';  s = s.replace(/translateY\((.*)\)/gmi,  `translateY(${v})`);  return s; },
+        translateZ:     (s: string, v: string|number) => { if (!s.match(/translateZ/i))  s += 'translateZ()';  s = s.replace(/translateZ\((.*)\)/gmi,  `translateZ(${v})`);  return s; },
+        translate3d:    (s: string, v: string|number) => { if (!s.match(/translate3d/i)) s += 'translate3d()'; s = s.replace(/translate3d\((.*)\)/gmi, `translate3d(${v})`); return s; },
+
+        rotate:         (s: string, v: string|number) => { if (!s.match(/rotate/i))   s += 'rotate()';   s = s.replace(/rotate\((.*)\)/gmi,   `rotate(${v})`);    return s; },
+        rotateX:        (s: string, v: string|number) => { if (!s.match(/rotateX/i))  s += 'rotateX()';  s = s.replace(/rotateX\((.*)\)/gmi,  `rotateX(${v})`);   return s; },
+        rotateY:        (s: string, v: string|number) => { if (!s.match(/rotateY/i))  s += 'rotateY()';  s = s.replace(/rotateY\((.*)\)/gmi,  `rotateY(${v})`);   return s; },
+        rotateZ:        (s: string, v: string|number) => { if (!s.match(/rotateZ/i))  s += 'rotateZ()';  s = s.replace(/rotateZ\((.*)\)/gmi,  `rotateZ(${v})`);   return s; },
+        rotate3d:       (s: string, v: string|number) => { if (!s.match(/rotate3d/i)) s += 'rotate3d()'; s = s.replace(/rotate3d\((.*)\)/gmi, `rotate3d(${v})`);  return s; },
+
+        scale:          (s: string, v: string|number) => { if (!s.match(/scale/i))   s += 'scale()';   s = s.replace(/scale\((.*)\)/gmi,   `scale(${v})`);   return s; },
+        scaleX:         (s: string, v: string|number) => { if (!s.match(/scaleX/i))  s += 'scaleX()';  s = s.replace(/scaleX\((.*)\)/gmi,  `scaleX(${v})`);  return s; },
+        scaleY:         (s: string, v: string|number) => { if (!s.match(/scaleY/i))  s += 'scaleY()';  s = s.replace(/scaleY\((.*)\)/gmi,  `scaleY(${v})`);  return s; },
+        scaleZ:         (s: string, v: string|number) => { if (!s.match(/scaleZ/i))  s += 'scaleZ()';  s = s.replace(/scaleZ\((.*)\)/gmi,  `scaleZ(${v})`);  return s; },
+        scale3d:        (s: string, v: string|number) => { if (!s.match(/scale3d/i)) s += 'scale3d()'; s = s.replace(/scale3d\((.*)\)/gmi, `scale3d(${v})`); return s; },
+
+        skew:           (s: string, v: string|number) => { if (!s.match(/skew/i))  s += 'skew()';  s = s.replace(/skew\((.*)\)/gmi,  `skew(${v})`);  return s; },
+        skewX:          (s: string, v: string|number) => { if (!s.match(/skewX/i)) s += 'skewX()'; s = s.replace(/skewX\((.*)\)/gmi, `skewX(${v})`); return s; },
+        skewY:          (s: string, v: string|number) => { if (!s.match(/skewY/i)) s += 'skewY()'; s = s.replace(/skewY\((.*)\)/gmi, `skewY(${v})`); return s; },
+
+        perspective:    (s: string, v: string|number) => { if (!s.match(/perspective/i)) s += 'perspective()'; s = s.replace(/perspective\((.*)\)/gmi, `perspective(${v})`); return s; },
+        matrix:         (s: string, v: string|number) => { if (!s.match(/matrix/i))      s += 'matrix()';      s = s.replace(/matrix\((.*)\)/gmi,      `matrix(${v})`);      return s; },
+        matrix3d:       (s: string, v: string|number) => { if (!s.match(/matrix3d/i))    s += 'matrix3d()';    s = s.replace(/matrix3d\((.*)\)/gmi,    `matrix3d(${v})`);    return s; }
+
+    }
+
+    transform(property: CSSTransformFunction, value: string | number): this {
+        for (let i = 0; i < this.#items.length; i++) {
+            const item = this.#items[i] as any as HTMLElement;
+            item.style.transform = this.#transforms[property](item.style.transform, value)
+        }
+        return this
+    }
 
 
 }
