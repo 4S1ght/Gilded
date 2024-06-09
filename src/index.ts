@@ -203,4 +203,40 @@ class GildedInstance<E extends Element> {
         return this
     }
 
+    /**
+     * Applies one or more event listeners to all selected elements.
+     * ```js
+     * g('.itemClass').on('click', (e) => ...)
+     * // or
+     * g('.itemClass').on(['mouseenter', 'mouseleave'], (e) => ...)
+     * ```
+     */
+    public on(event: string | string[], callback: (e: Event) => void) {
+        if (typeof event === 'string') event = [event]
+        this.#items.forEach(item => {
+            event.forEach(e => {
+                item.addEventListener(e, callback)
+            })
+        })
+    }
+
+    /**
+     * Removes one or more event listeners to all selected elements.
+     * ```js
+     * g('.itemClass').off('click', callback)
+     * ```
+     * Or
+     * ```js
+     * g('.itemClass').off(['mouseenter', 'mouseleave'], callback)
+     * ```
+     */
+    public off(event: string | string[], callback: (e: Event) => void) {
+        if (typeof event === 'string') event = [event]
+        this.#items.forEach(item => {
+            event.forEach(e => {
+                item.removeEventListener(e, callback)
+            })
+        })
+    }
+
 }
