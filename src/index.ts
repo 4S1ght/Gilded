@@ -3,6 +3,7 @@
 
 import * as math from './math.js'
 import * as timing from './timing.js'
+import * as css from './css.js'
 
 // Types ======================================================================
 
@@ -19,29 +20,18 @@ type TGildedSelector = TGildedSelectorValue | Array<TGildedSelectorValue>
 // Element selector
 type S<K extends Element> = K | K[] | NodeListOf<K>
 
-type CSSTransformFunction =
-  | 'translate'
-  | 'translateX'
-  | 'translateY'
-  | 'translateZ'
-  | 'translate3d'
-  | 'scale'
-  | 'scaleX'
-  | 'scaleY'
-  | 'scaleZ'
-  | 'scale3d'
-  | 'rotate'
-  | 'rotateX'
-  | 'rotateY'
-  | 'rotateZ'
-  | 'rotate3d'
-  | 'skew'
-  | 'skewX'
-  | 'skewY'
-  | 'matrix'
-  | 'matrix3d'
-  | 'perspective'
-
+type CSSStyleProperty = keyof Omit<
+    CSSStyleDeclaration, 
+    "getPropertyPriority" |
+    "getPropertyValue" | 
+    "item" | 
+    "removeProperty" | 
+    "setProperty" | 
+    "parentRule" | 
+    "length" |
+    typeof Symbol.iterator | 
+    number
+>
 
 // Static =====================================================================
 
@@ -332,7 +322,7 @@ class GildedInstance<E extends Element> {
     on(event: string | string[], callback: (e: Event) => void): this {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
-            event.forEach(e => {
+            (event as string[]).forEach(e => {
                 item.addEventListener(e, callback)
             })
         })
@@ -350,7 +340,7 @@ class GildedInstance<E extends Element> {
     off(event: string | string[], callback: (e: Event) => void): this {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
-            event.forEach(e => {
+            (event as string[]).forEach(e => {
                 item.removeEventListener(e, callback)
             })
         })
@@ -361,42 +351,77 @@ class GildedInstance<E extends Element> {
     // CSS 
     // ========================================
 
-    #transforms: Record<CSSTransformFunction, (s: string, v: string | number) => string> = {
-
-        translate:      (s: string, v: string|number) => { if (!s.match(/translate/i))   s += 'translate()';   s = s.replace(/translate\((.*)\)/gmi,   `translate(${v})`);   return s; },
-        translateX:     (s: string, v: string|number) => { if (!s.match(/translateX/i))  s += 'translateX()';  s = s.replace(/translateX\((.*)\)/gmi,  `translateX(${v})`);  return s; },
-        translateY:     (s: string, v: string|number) => { if (!s.match(/translateY/i))  s += 'translateY()';  s = s.replace(/translateY\((.*)\)/gmi,  `translateY(${v})`);  return s; },
-        translateZ:     (s: string, v: string|number) => { if (!s.match(/translateZ/i))  s += 'translateZ()';  s = s.replace(/translateZ\((.*)\)/gmi,  `translateZ(${v})`);  return s; },
-        translate3d:    (s: string, v: string|number) => { if (!s.match(/translate3d/i)) s += 'translate3d()'; s = s.replace(/translate3d\((.*)\)/gmi, `translate3d(${v})`); return s; },
-
-        rotate:         (s: string, v: string|number) => { if (!s.match(/rotate/i))   s += 'rotate()';   s = s.replace(/rotate\((.*)\)/gmi,   `rotate(${v})`);    return s; },
-        rotateX:        (s: string, v: string|number) => { if (!s.match(/rotateX/i))  s += 'rotateX()';  s = s.replace(/rotateX\((.*)\)/gmi,  `rotateX(${v})`);   return s; },
-        rotateY:        (s: string, v: string|number) => { if (!s.match(/rotateY/i))  s += 'rotateY()';  s = s.replace(/rotateY\((.*)\)/gmi,  `rotateY(${v})`);   return s; },
-        rotateZ:        (s: string, v: string|number) => { if (!s.match(/rotateZ/i))  s += 'rotateZ()';  s = s.replace(/rotateZ\((.*)\)/gmi,  `rotateZ(${v})`);   return s; },
-        rotate3d:       (s: string, v: string|number) => { if (!s.match(/rotate3d/i)) s += 'rotate3d()'; s = s.replace(/rotate3d\((.*)\)/gmi, `rotate3d(${v})`);  return s; },
-
-        scale:          (s: string, v: string|number) => { if (!s.match(/scale/i))   s += 'scale()';   s = s.replace(/scale\((.*)\)/gmi,   `scale(${v})`);   return s; },
-        scaleX:         (s: string, v: string|number) => { if (!s.match(/scaleX/i))  s += 'scaleX()';  s = s.replace(/scaleX\((.*)\)/gmi,  `scaleX(${v})`);  return s; },
-        scaleY:         (s: string, v: string|number) => { if (!s.match(/scaleY/i))  s += 'scaleY()';  s = s.replace(/scaleY\((.*)\)/gmi,  `scaleY(${v})`);  return s; },
-        scaleZ:         (s: string, v: string|number) => { if (!s.match(/scaleZ/i))  s += 'scaleZ()';  s = s.replace(/scaleZ\((.*)\)/gmi,  `scaleZ(${v})`);  return s; },
-        scale3d:        (s: string, v: string|number) => { if (!s.match(/scale3d/i)) s += 'scale3d()'; s = s.replace(/scale3d\((.*)\)/gmi, `scale3d(${v})`); return s; },
-
-        skew:           (s: string, v: string|number) => { if (!s.match(/skew/i))  s += 'skew()';  s = s.replace(/skew\((.*)\)/gmi,  `skew(${v})`);  return s; },
-        skewX:          (s: string, v: string|number) => { if (!s.match(/skewX/i)) s += 'skewX()'; s = s.replace(/skewX\((.*)\)/gmi, `skewX(${v})`); return s; },
-        skewY:          (s: string, v: string|number) => { if (!s.match(/skewY/i)) s += 'skewY()'; s = s.replace(/skewY\((.*)\)/gmi, `skewY(${v})`); return s; },
-
-        perspective:    (s: string, v: string|number) => { if (!s.match(/perspective/i)) s += 'perspective()'; s = s.replace(/perspective\((.*)\)/gmi, `perspective(${v})`); return s; },
-        matrix:         (s: string, v: string|number) => { if (!s.match(/matrix/i))      s += 'matrix()';      s = s.replace(/matrix\((.*)\)/gmi,      `matrix(${v})`);      return s; },
-        matrix3d:       (s: string, v: string|number) => { if (!s.match(/matrix3d/i))    s += 'matrix3d()';    s = s.replace(/matrix3d\((.*)\)/gmi,    `matrix3d(${v})`);    return s; }
-
-    }
-
-    transform(property: CSSTransformFunction, value: string | number): this {
+    /**
+     * Applies a transform function to all selected elements.
+     * Unlike `element.style.transform`, it does not affect the already existing transforms,
+     * meaning that changing a property like `translateX` won't reset `translateY`.
+     * 
+     * **Note**: For this method to work properly, all the transforms of the target elements
+     * must be transferred over to an inline `style` tag.
+     * ```js
+     * g('button').css.toInline('transform')
+     * g('button').transform('translateX', '100px')
+     * ```
+     * @param property transform function name
+     * @param value transform value
+     */
+    transform(property: keyof typeof css.transforms, value: string | number): this {
         for (let i = 0; i < this.#items.length; i++) {
             const item = this.#items[i] as any as HTMLElement;
-            item.style.transform = this.#transforms[property](item.style.transform, value)
+            item.style.transform = css.transforms[property](item.style.transform, value)
         }
         return this
+    }
+
+    /** Holds various CSS manipulation methods. */
+    css = {
+
+        /**
+         * Transfers the specified computed CSS styles of the target element into it's inline
+         * style tag. The main use of this method is to avoid bugs when performing transform 
+         * transitions on elements with external CSS styling.
+         * 
+         * Example:
+         * ```js
+         * // Transfer the computed "transform" style into the
+         * // inline style tag before using "g.transform":
+         * g('button').css.toInline('transform')
+         * g('button').transform('translateX', '100px')
+         * ```
+         * @param properties CSS property names
+         */
+        toInline: (...properties: CSSStyleProperty[]): this => {
+            this.#items.forEach(element => {
+                properties.forEach(prop => {
+                    const value = window.getComputedStyle(element)[prop] as string
+                    if (['none', null].includes(value)) {
+                        (element as any as HTMLElement).style[prop] = value
+                    }
+                })
+            })
+            return this
+        },
+
+        /**
+         * Sets a variable on the target elements.
+         * ```jsx
+         * g('button').css.var('size', '20px')
+         * // Would result in
+         * <button style="--size: 20px;"></button>
+         * ```
+         * @param variableName 
+         * @param value 
+         * @returns 
+         */
+        var: (variableName: string, value: string): this => {
+            if (variableName.indexOf('--') !== 0) variableName = `--${variableName}`
+            for (let i = 0; i < this.#items.length; i++) {
+                const item = this.#items[i] as any as HTMLElement
+                item.style.setProperty(variableName, value)
+            }
+            return this
+        }
+
     }
 
 
