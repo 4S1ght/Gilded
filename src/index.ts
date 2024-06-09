@@ -21,6 +21,7 @@ type S<K extends Element> = K | K[] | NodeListOf<K>
 /**
  * Gilded API entry point.  
  * Holds all the statically accessible library methods, grouped under their respective categories.
+ * Returns a class instance with DOM manipulation methods when called,
  * ```js
  * // Access a static method
  * g.m.rand(1, 100)
@@ -51,6 +52,10 @@ export function g(selector: TGildedSelector): GildedInstance<Element> {
     return new GildedInstance(items)
 
 }
+
+// ========================================
+// Mathematical methods
+// ========================================
 
 /** Holds mathematical and color manipulation methods. */
 g.m = {
@@ -160,6 +165,70 @@ g.m = {
 
 }
 
+// ========================================
+// Timing & animation
+// ========================================
+
+// easeOutElastic
+const c4 = (2 * Math.PI) / 3
+// easeOutBounce
+const n1 = 7.5625
+const d1 = 2.75
+
+/** Holds a list of predefined animation timing functions. */
+g.f = {
+
+    easeInQuad: (t: number) =>  t*t,
+    easeInCubic: (t: number) => t*t*t,
+    easeInQuart: (t: number) => t*t*t*t,
+    easeInQuint: (t: number) => t*t*t*t*t,
+    easeInCirc: (t: number) =>  1 - Math.sqrt(1 - Math.pow(t, 2)),
+    easeInExpo: (t: number) =>  t === 0 ? 0 : Math.pow(2, 10 * t - 10),
+
+    easeOutQuad: (t: number) =>  t*(2-t),
+    easeOutCubic: (t: number) => (--t)*t*t+1,
+    easeOutQuart: (t: number) => 1-(--t)*t*t*t,
+    easeOutQuint: (t: number) => 1+(--t)*t*t*t*t,
+    easeOutCirc: (t: number) =>  Math.sqrt(1 - Math.pow(t - 1, 2)),
+    easeOutExpo: (t: number) =>  t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+    
+    easeInOutQuad: (t: number) =>  t<.5 ? 2*t*t : -1+(4-2*t)*t,
+    easeInOutCubic: (t: number) => t<.5 ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
+    easeInOutQuart: (t: number) => t<.5 ? 8*t*t*t*t : 1-8*(--t)*t*t*t,
+    easeInOutQuint: (t: number) => t<.5 ? 16*t*t*t*t*t : 1+16*(--t)*t*t*t*t,
+    easeInOutCirc: (t: number) =>  t<.5 ?(1-Math.sqrt(1-Math.pow(2*t,2)))/2 : (Math.sqrt(1-Math.pow(-2*t+2,2))+1)/2,
+    easeInOutExpo: (t: number) =>  t === 0 ? 0 : t === 1 ? 1 : t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2,
+
+    easeOutElastic: (t: number) => t === 0 ? 0 : t === 1? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1,
+    easeOutBounce: (t: number) =>  t < 1/d1 ? n1*t*t : t<2/d1?n1*(t-=1.5/d1)*t+.75 : t<2.5/d1?n1*(t-=2.25/d1)*t+.9375 : n1*(t-=2.625/d1)*t+.984375
+    
+}
+
+
+/**
+ * Can be used exactly like native `setTimeout` but with swapped parameters for readability.   
+ * Returns a promise that is resolved after the callback fires, which can be used to easily   
+ * implement delays in existing code like so:
+ * ```js
+ * console.log('start')
+ * await ASync.time(1000) // 1s
+ * console.log('end')
+ * ```
+ */
+g.time = (delay: number, callback?: Function) => {
+    return new Promise<void>((resolve, reject) => {
+        window.setTimeout(() => {
+            try {
+                if (callback) callback()
+                resolve()
+            } 
+            catch (error) {
+                reject(error)
+            }
+        }, delay)
+    })
+};
+
 // Instance ===================================================================
 
 class GildedInstance<E extends Element> {
@@ -179,7 +248,9 @@ class GildedInstance<E extends Element> {
         }
     }
 
+    // ========================================
     // Class manipulation 
+    // ========================================
 
     /**
      * Adds a class name to all selected elements.
@@ -202,6 +273,10 @@ class GildedInstance<E extends Element> {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.add(...className)
         return this
     }
+
+    // ========================================
+    // Events
+    // ========================================
 
     /**
      * Applies one or more event listeners to all selected elements.
@@ -238,5 +313,10 @@ class GildedInstance<E extends Element> {
             })
         })
     }
+
+    // ========================================
+    // CSS 
+    // ========================================
+
 
 }
