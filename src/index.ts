@@ -274,30 +274,36 @@ g.f = easing
 
 export declare namespace g {
     /**
-     * Can be used exactly like native `setTimeout` but with swapped parameters for readability.   
-     * Returns a promise that is resolved after the callback fires, which can be used to easily   
-     * implement delays in existing code like so:
+     * Returns a promise resolved after a specified amount of time for use in animation
+     * sequences to create time gaps.
+     * 
+     * Accepts an optional callback function for use in the same way as regular `setTimeout`,
+     * but with swapped parameters for better readability.
      * ```js
+     * // Create a time gap inside an async function:
      * console.log('start')
-     * await ASync.time(1000) // 1s
+     * await g.time(1000) 
      * console.log('end')
+     * 
+     * // Use as a `setTimeout` replacement:
+     * g.time(1000, () => {
+     *     console.log('finished')
+     * })
      * ```
      */
-    function time(delay: number, callback?: Function): Promise<void>
+    function time(delay: number): Promise<void>
+    function time(delay: number, callback: Function): void
 }
 
-function time(delay: number, callback?: Function): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-        window.setTimeout(() => {
-            try {
-                if (callback) callback()
-                resolve()
-            } 
-            catch (error) {
-                reject(error)
-            }
-        }, delay)
-    })
+function time(delay: number, callback?: Function): any {
+    if (callback) {
+        setTimeout(callback, delay)
+    }
+    else {
+        return new Promise<void>(resolve => {
+            setTimeout(() => resolve(), delay)
+        })
+    }
 };
 
 g.time = time
@@ -310,9 +316,6 @@ export declare namespace g {
      * transitions, with an optional `overlap` parameter that specifies a custom resolve time
      * to allow for overlapping transitions.
      * ```ts
-     * // Definition:
-     * transition(duration, overlap?, easing? callback)
-     * 
      * // Move div1 box by 100px
      * await g.transition(1000, t => div1.style.left = `${100*t}px`)
      * 
@@ -540,10 +543,15 @@ class GildedInstance<E extends Element> {
 
         /**
          * Sets a variable on the target elements.
+         * 
+         * Starting double-dash (`--`) can be omitted and will be handled automatically.
          * ```jsx
          * g('button').css.var('size', '20px')
          * // Would result in
          * <button style="--size: 20px;"></button>
+         * 
+         * // Or if you need to set a global variable:
+         * g(document.documentElement).css.var('theme-color', '#ffffff')
          * ```
          * @param variableName 
          * @param value 
