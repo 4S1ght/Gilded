@@ -1,9 +1,7 @@
-
 // Imports ====================================================================
 
-import * as math from './math.js'
-import * as timing from './timing.js'
-import * as css from './css.js'
+import transforms from './transforms.js'
+import easing from './easing.js'
 
 // Types ======================================================================
 
@@ -34,6 +32,24 @@ type CSSStyleProperty = keyof Omit<
     number
 >
 
+// Timing function
+type EasingFunc = (t: number) => number
+// Transition callback function
+type EasingCallback = (t: number) => any
+
+
+// Helpers ====================================================================
+
+const REG_RGB_CSS_FUNCTION = /rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})(?:,\s*([0-1](?:\.\d+)?))?\)/i
+const REG_HEX_REGULAR =      /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})?$/i
+const REG_HEX_SHORT =        /^#?([a-f\d])([a-f\d])([a-f\d])([a-f\d])?$/i
+
+const toLongHex = (hex: string) => {
+    const match = hex.match(REG_HEX_SHORT)
+    if (!match) return hex
+    return `#${match[1]}${match[1]}${match[2]}${match[2]}${match[3]}${match[3]}` 
+        + (match[4] ? `${match[4]}${match[4]}` : 'ff')
+}
 
 // Static =====================================================================
 
@@ -76,13 +92,18 @@ export function g(selector: TGildedSelector): GildedInstance<Element> {
 // Mathematical methods
 // ========================================
 
-/** Holds mathematical and color manipulation methods. */
-g.m = {
+export declare namespace g {
+    /** Holds mathematical and color manipulation methods. */
+    const m: typeof math
+}
+
+const math = {
 
     /**
      * Returns random number within boundaries set by `min` and `max`.
      */
-    rand: math.rand,
+    rand: (min: number, max: number) => 
+        Math.floor(Math.random() * (max - min + 1) + min),
 
     /**
      * Calculates the average from an array of numbers.
@@ -90,7 +111,11 @@ g.m = {
      * m.avg([20, 40, 60]) // -> 40
      * ```
      */
-    avg: math.avg,
+    avg: (numbers: number[]): number => { 
+        let x = 0 
+        for (let i = 0; i < numbers.length; i++) x += numbers[i]
+        return x / numbers.length
+    },
 
 
     /**
@@ -101,7 +126,8 @@ g.m = {
      * m.clamp(0, 15, 10) // 10
      * ```
      */
-    clamp: math.clamp,
+    clamp: (min: number, value: number, max: number): number => 
+        value < min ? min : value > max ? max : value,
 
     /**
      * Returns a transition value between two numbers based on time `t`.
@@ -109,7 +135,8 @@ g.m = {
      * m.slide(0.5, 20, 70) // -> 45
      * ```
      */
-    slide: math.slide,
+    slide: (t: number, from: number, to: number): number => 
+        from + ((to - from) * t),
 
     /**
      * Works the same as `int.toString(16)` while making sure that the output string is at least 2
@@ -119,7 +146,10 @@ g.m = {
      * m.toHex(128) // -. 80
      * ```
      */
-    toHex: math.toHex,
+    toHex: (int: number): string => {
+        let hex = int.toString(16)
+        return hex.length === 1 ? `0${hex}` : `${hex}`
+    },
 
     /**
      * Takes a hex color code and converts it into the RGB CSS function format.
@@ -128,7 +158,16 @@ g.m = {
      * m.hexToRGB('#4cddca88') // -> rgba(75, 221, 201, 0.5) 
      * ``` 
      */
-    hexToRgb: math.hexToRgb,
+    hexToRgb: (hex: string): string => {
+        // Remove potential hash at the start of the color code
+        if (hex[0] === '#') hex = hex.substring(1)
+    
+        let hexParts = hex.match(/.{1,2}/g) as RegExpMatchArray
+        let hexPartsNum: (number|string)[] = []
+        for (let i = 0; i < 3; i++) hexPartsNum[i] = parseInt(hexParts[i], 16)
+        if (hexParts.length === 4) hexPartsNum[3] = (parseInt(hexParts[3]) / 255).toString().substring(0,5)
+        return hexPartsNum.length === 3 ? `rgb(${hexPartsNum.join(', ')})` : `rgba(${hexPartsNum.join(', ')})`
+    },
 
     /**
      * Takes an RGB color function and returns a hex code.
@@ -136,7 +175,12 @@ g.m = {
      * m.rgbToHex('rgb(75, 221, 201)') // #4cddca
      * ```
      */
-    rgbToHex: math.rgbToHex,
+    rgbToHex: (string: string): string => {
+        let _string = string.replace(/rgba|rgb|\(|\)| /g, '').split(',')
+        for (let i = 0; i < 3; i++) _string[i] = g.m.toHex(parseInt(_string[i]))
+        if (_string.length === 4) _string[3] = (parseFloat(_string[3]) * 255).toString(16).split('.')[0]
+        return `#${_string.join('')}`
+    },
 
     /**
      * Returns a transition value between two hex color codes based on the progress `t`.  
@@ -161,7 +205,21 @@ g.m = {
      * m.hexTransform(0.5, '#0004', '#888888') // #444444a2
      * ```
      */
-    hexTransform: math.hexTransform,
+    hexTransform: (t: number, from: string, to: string) => {
+    
+        const fromMatch = toLongHex(from).match(REG_HEX_REGULAR) as RegExpMatchArray
+        const toMatch   = toLongHex(to).match(REG_HEX_REGULAR)   as RegExpMatchArray
+    
+        const v: string[] = []
+    
+        for (let i = 1; i < 4; i++)
+            v.push(g.m.toHex(Math.round(g.m.slide(t, parseInt(fromMatch[i], 16), parseInt(toMatch[i], 16)))))
+    
+        return from.length === 5 || from.length === 9 || to.length === 5 || to.length === 9
+            ? `#${v[0]}${v[1]}${v[2]}${g.m.toHex(Math.round(g.m.slide(t, parseInt(fromMatch[4] || 'ff', 16), parseInt(toMatch[4] || 'ff', 16))))}`
+            : `#${v.join('')}`
+    
+    },
 
     /**
      * Returns a transition value between two `rgb`/`rgba` color functions based on the progress `t`.  
@@ -180,82 +238,143 @@ g.m = {
      * m.rgbTransform(0.5, 'rgb(0, 0, 0)', 'rgba(255, 255, 255, 0)') // -> rgba(128, 128, 128, 0.5)
      * ```
      */
-    rgbTransform: math.rgbTransform
+    rgbTransform: (t: number, from: string, to: string) => {
+
+        const fromMatch = from.match(REG_RGB_CSS_FUNCTION) as RegExpMatchArray
+        const toMatch   = to.match(REG_RGB_CSS_FUNCTION)   as RegExpMatchArray
+    
+        const v: number[] = []
+    
+        for (let i = 1; i < 4; i++) 
+            v.push(Math.round(g.m.slide(t, parseInt(fromMatch[i]), parseInt(toMatch[i]))))
+    
+        return from.includes('rgba') || to.includes('rgba')
+            ? `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${g.m.slide(t, parseInt(fromMatch[4] || '1'), parseInt(toMatch[4] || '1'))})`
+            : `rgb(${v.join(', ')})`
+    
+    }
 
 }
+
+// @ts-ignore
+g.m = math
 
 // ========================================
 // Timing & animation
 // ========================================
 
-/** Holds a list of ready to use animation timing functions. */
-g.f = {
-
-    easeInQuad: timing.easeInQuad,
-    easeInCubic: timing.easeInCubic,
-    easeInQuart: timing.easeInQuart,
-    easeInQuint: timing.easeInQuint,
-    easeInCirc: timing.easeInCirc,
-    easeInExpo: timing.easeInExpo,
-
-    easeOutQuad: timing.easeOutQuad,
-    easeOutCubic: timing.easeOutCubic,
-    easeOutQuart: timing.easeOutQuart,
-    easeOutQuint: timing.easeOutQuint,
-    easeOutCirc: timing.easeOutCirc,
-    easeOutExpo: timing.easeOutExpo,
-
-    easeInOutQuad: timing.easeInOutQuad,
-    easeInOutCubic: timing.easeInOutCubic,
-    easeInOutQuart: timing.easeInOutQuart,
-    easeInOutQuint: timing.easeInOutQuint,
-    easeInOutCirc: timing.easeInOutCirc,
-    easeInOutExpo: timing.easeInOutExpo,
-
-    easeOutElastic: timing.easeOutElastic,
-    easeOutBounce: timing.easeOutBounce
-
+export declare namespace g {
+    /** Holds a list of ready to use animation timing functions. */
+    const f: typeof easing
 }
 
+// @ts-ignore
+g.f = easing
 
-/**
- * Can be used exactly like native `setTimeout` but with swapped parameters for readability.   
- * Returns a promise that is resolved after the callback fires, which can be used to easily   
- * implement delays in existing code like so:
- * ```js
- * console.log('start')
- * await ASync.time(1000) // 1s
- * console.log('end')
- * ```
- */
-g.time = timing.time
 
-/**
- * Creates a transition of specified length (in milliseconds) and calls a callback function
- * for each animation frame. A promise is returned which can be awaited to sequence multiple 
- * transitions, with an optional `overlap` parameter that specifies a custom resolve time
- * to allow for overlapping transitions.
- * ```ts
- * // Definition:
- * transition(duration, overlap?, easing? callback)
- * 
- * // Move div1 box by 100px
- * await g.transition(1000, t => div1.style.left = `${100*t}px`)
- * 
- * // Play div2 animation once div1 is half-finished:
- * await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
- * await g.transition(1000,      t => div2.style.left = `${100*t}px`)
- * 
- * // Apply an easing function:
- * await g.transition(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
- * 
- * // Combine easing with overlaps:
- * await g.transition(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
- * await g.transition(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
- * 
- * ```
- */
-g.transition = timing.transition
+export declare namespace g {
+    /**
+     * Can be used exactly like native `setTimeout` but with swapped parameters for readability.   
+     * Returns a promise that is resolved after the callback fires, which can be used to easily   
+     * implement delays in existing code like so:
+     * ```js
+     * console.log('start')
+     * await ASync.time(1000) // 1s
+     * console.log('end')
+     * ```
+     */
+    function time(delay: number, callback?: Function): Promise<void>
+}
+
+function time(delay: number, callback?: Function): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        window.setTimeout(() => {
+            try {
+                if (callback) callback()
+                resolve()
+            } 
+            catch (error) {
+                reject(error)
+            }
+        }, delay)
+    })
+};
+
+g.time = time
+
+
+export declare namespace g { 
+    /**
+     * Creates a transition of specified length (in milliseconds) and calls a callback function
+     * for each animation frame. A promise is returned which can be awaited to sequence multiple 
+     * transitions, with an optional `overlap` parameter that specifies a custom resolve time
+     * to allow for overlapping transitions.
+     * ```ts
+     * // Definition:
+     * transition(duration, overlap?, easing? callback)
+     * 
+     * // Move div1 box by 100px
+     * await g.transition(1000, t => div1.style.left = `${100*t}px`)
+     * 
+     * // Play div2 animation once div1 is half-finished:
+     * await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
+     * await g.transition(1000,      t => div2.style.left = `${100*t}px`)
+     * 
+     * // Apply an easing function:
+     * await g.transition(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+     * 
+     * // Combine easing with overlaps:
+     * await g.transition(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+     * await g.transition(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
+     * 
+     * ```
+     */
+    function transition(duration: number,                  cb: EasingCallback): Promise<void>
+    function transition(duration: number, overlap: number, cb: EasingCallback): Promise<void>
+    function transition(duration: number, f: EasingFunc,   cb: EasingCallback): Promise<void>
+    function transition(duration: number, overlap: number, f: EasingFunc, cb: EasingCallback): Promise<void>
+}
+
+function transition(...params: (number|EasingFunc|EasingCallback)[]): Promise<void> {
+    return new Promise<void>(resolve => {
+
+        let startTime: number | null = null
+        let [$duration, $overlap] = params.filter(item => typeof item === 'number')   as [number, number | undefined]
+        let [$easing, $callback]  = params.filter(item => typeof item === 'function') as [EasingFunc | EasingCallback, EasingCallback | undefined]
+
+        const duration: number         = $duration
+        const overlap:  number         = $overlap || 0
+        const easing:   EasingFunc     = $callback ? $easing : (t: number) => t
+        const callback: EasingCallback = $callback ? $callback : $easing
+        let resolved = false
+
+        function frame(currentTime: number) {
+
+            if (!startTime) startTime = currentTime;
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1)
+
+            callback(easing(progress))
+
+            // Resolve the promise earlier than the animation to allow for overlaps
+            if (!resolved && overlap && elapsedTime >= overlap) {
+                resolve()
+                resolved = true
+            }
+
+            // Continue animation or finish it
+            if (progress < 1) requestAnimationFrame(frame)
+            else !resolved && resolve()
+
+        }
+
+        requestAnimationFrame(frame)
+
+    })
+}
+
+g.transition = transition
+
 
 // Instance ===================================================================
 
@@ -282,7 +401,7 @@ class GildedInstance<E extends Element> {
      * @param callback 
      * @returns 
      */
-    forEach(callback: (value: E, index: number, array: E[]) => any): this {
+    forEach(callback: (value: E, index: number, array: E[]) => any): GildedInstance<E> {
         this.#items.forEach(callback)
         return this
     }
@@ -297,7 +416,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').addClass('my-class')
      * ```
      */
-    addClass(className: string | string[]): this {
+    addClass(className: string | string[]): GildedInstance<E> {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.add(...className)
         return this
     }
@@ -308,7 +427,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').removeClass('my-class')
      * ```
      */
-    removeClass(className: string | string[]): this {
+    removeClass(className: string | string[]): GildedInstance<E> {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.add(...className)
         return this
     }
@@ -319,7 +438,7 @@ class GildedInstance<E extends Element> {
      * g('button.class#id').toggleClass('my-class')
      * ```
      */
-    toggleClass(className: string): this {
+    toggleClass(className: string): GildedInstance<E> {
         for (let i = 0; i < this.#items.length; i++) this.#items[i].classList.toggle(className)
         return this
     }
@@ -336,7 +455,7 @@ class GildedInstance<E extends Element> {
      * g('.itemClass').on(['mouseenter', 'mouseleave'], (e) => ...)
      * ```
      */
-    on(event: string | string[], callback: (e: Event) => void): this {
+    on(event: string | string[], callback: (e: Event) => void): GildedInstance<E> {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
             (event as string[]).forEach(e => {
@@ -354,7 +473,7 @@ class GildedInstance<E extends Element> {
      * g('.itemClass').off(['mouseenter', 'mouseleave'], callback)
      * ```
      */
-    off(event: string | string[], callback: (e: Event) => void): this {
+    off(event: string | string[], callback: (e: Event) => void): GildedInstance<E> {
         if (typeof event === 'string') event = [event]
         this.#items.forEach(item => {
             (event as string[]).forEach(e => {
@@ -385,10 +504,10 @@ class GildedInstance<E extends Element> {
          * @param property transform function name
          * @param value transform value
          */
-        transform: (property: keyof typeof css.transforms, value: string | number): this => {
+        transform: (property: keyof typeof transforms, value: string | number): GildedInstance<E> => {
             for (let i = 0; i < this.#items.length; i++) {
                 const item = this.#items[i] as any as HTMLElement;
-                item.style.transform = css.transforms[property](item.style.transform, value)
+                item.style.transform = transforms[property](item.style.transform, value)
             }
             return this
         },
@@ -407,7 +526,7 @@ class GildedInstance<E extends Element> {
          * ```
          * @param properties CSS property names
          */
-        toInline: (...properties: CSSStyleProperty[]): this => {
+        toInline: (...properties: CSSStyleProperty[]): GildedInstance<E> => {
             this.#items.forEach(element => {
                 properties.forEach(prop => {
                     const value = window.getComputedStyle(element)[prop] as string
@@ -430,7 +549,7 @@ class GildedInstance<E extends Element> {
          * @param value 
          * @returns 
          */
-        var: (variableName: string, value: string): this => {
+        var: (variableName: string, value: string): GildedInstance<E> => {
             if (variableName.indexOf('--') !== 0) variableName = `--${variableName}`
             for (let i = 0; i < this.#items.length; i++) {
                 const item = this.#items[i] as any as HTMLElement

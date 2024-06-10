@@ -1,4 +1,4 @@
-export const transforms = {
+export default {
 
     translate:      (s: string, v: string|number) => { if (!s.match(/translate/i))   s += 'translate()';   s = s.replace(/translate\((.*)\)/gmi,   `translate(${v})`);   return s; },
     translateX:     (s: string, v: string|number) => { if (!s.match(/translateX/i))  s += 'translateX()';  s = s.replace(/translateX\((.*)\)/gmi,  `translateX(${v})`);  return s; },

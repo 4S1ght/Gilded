@@ -13,7 +13,7 @@
         "motion"
     ],
     "scripts": {
-        "dev": "vite build --watch"
+        "dev": "tsc -w"
     },
     "repository": {
         "type": "git",
