@@ -4,7 +4,6 @@ const c4 = (2 * Math.PI) / 3
 const n1 = 7.5625
 const d1 = 2.75
 
-
 export const easeInQuad =  (t: number) => t*t
 export const easeInCubic = (t: number) => t*t*t
 export const easeInQuart = (t: number) => t*t*t*t
@@ -28,3 +27,65 @@ export const easeInOutExpo =  (t: number) => t === 0 ? 0 : t === 1 ? 1 : t < 0.5
 
 export const easeOutElastic = (t: number) => t === 0 ? 0 : t === 1? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1
 export const easeOutBounce =  (t: number) => t < 1/d1 ? n1*t*t : t<2/d1?n1*(t-=1.5/d1)*t+.75 : t<2.5/d1?n1*(t-=2.25/d1)*t+.9375 : n1*(t-=2.625/d1)*t+.984375
+
+
+export function time(delay: number, callback?: Function) {
+    return new Promise<void>((resolve, reject) => {
+        window.setTimeout(() => {
+            try {
+                if (callback) callback()
+                resolve()
+            } 
+            catch (error) {
+                reject(error)
+            }
+        }, delay)
+    })
+};
+
+// Transition timing function
+type EasingFunc = (t: number) => number
+type EasingCallback = (t: number) => any
+
+export function transition(duration: number,                  cb: EasingCallback): Promise<void>
+export function transition(duration: number, overlap: number, cb: EasingCallback): Promise<void>
+export function transition(duration: number, f: EasingFunc,   cb: EasingCallback): Promise<void>
+export function transition(duration: number, overlap: number, f: EasingFunc, cb: EasingCallback): Promise<void>
+
+export function transition(...params: (number|EasingFunc|EasingCallback)[]): Promise<void> {
+    return new Promise<void>(resolve => {
+
+        let startTime: number | null = null
+        let [$duration, $overlap] = params.filter(item => typeof item === 'number')   as [number, number | undefined]
+        let [$easing, $callback]  = params.filter(item => typeof item === 'function') as [EasingFunc | EasingCallback, EasingCallback | undefined]
+
+        const duration: number         = $duration
+        const overlap:  number         = $overlap || 0
+        const easing:   EasingFunc     = $callback ? $easing : (t: number) => t
+        const callback: EasingCallback = $callback ? $callback : $easing
+        let resolved = false
+
+        function frame(currentTime: number) {
+
+            if (!startTime) startTime = currentTime;
+            const elapsedTime = currentTime - startTime;
+            const progress = Math.min(elapsedTime / duration, 1)
+
+            callback(easing(progress))
+
+            // Resolve the promise earlier than the animation to allow for overlaps
+            if (!resolved && overlap && elapsedTime >= overlap) {
+                resolve()
+                resolved = true
+            }
+
+            // Continue animation or finish it
+            if (progress < 1) requestAnimationFrame(frame)
+            else !resolved && resolve()
+
+        }
+
+        requestAnimationFrame(frame)
+
+    })
+}

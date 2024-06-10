@@ -20,6 +20,7 @@ type TGildedSelector = TGildedSelectorValue | Array<TGildedSelectorValue>
 // Element selector
 type S<K extends Element> = K | K[] | NodeListOf<K>
 
+// CSS style props for .toInline()
 type CSSStyleProperty = keyof Omit<
     CSSStyleDeclaration, 
     "getPropertyPriority" |
@@ -32,6 +33,7 @@ type CSSStyleProperty = keyof Omit<
     typeof Symbol.iterator | 
     number
 >
+
 
 // Static =====================================================================
 
@@ -226,19 +228,34 @@ g.f = {
  * console.log('end')
  * ```
  */
-g.time = (delay: number, callback?: Function) => {
-    return new Promise<void>((resolve, reject) => {
-        window.setTimeout(() => {
-            try {
-                if (callback) callback()
-                resolve()
-            } 
-            catch (error) {
-                reject(error)
-            }
-        }, delay)
-    })
-};
+g.time = timing.time
+
+/**
+ * Creates a transition of specified length (in milliseconds) and calls a callback function
+ * for each animation frame. A promise is returned which can be awaited to sequence multiple 
+ * transitions, with an optional `overlap` parameter that specifies a custom resolve time
+ * to allow for overlapping transitions.
+ * ```ts
+ * // Definition:
+ * transition(duration, overlap?, easing? callback)
+ * 
+ * // Move div1 box by 100px
+ * await g.transition(1000, t => div1.style.left = `${100*t}px`)
+ * 
+ * // Play div2 animation once div1 is half-finished:
+ * await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
+ * await g.transition(1000,      t => div2.style.left = `${100*t}px`)
+ * 
+ * // Apply an easing function:
+ * await g.transition(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+ * 
+ * // Combine easing with overlaps:
+ * await g.transition(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+ * await g.transition(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
+ * 
+ * ```
+ */
+g.transition = timing.transition
 
 // Instance ===================================================================
 
@@ -351,30 +368,30 @@ class GildedInstance<E extends Element> {
     // CSS 
     // ========================================
 
-    /**
-     * Applies a transform function to all selected elements.
-     * Unlike `element.style.transform`, it does not affect the already existing transforms,
-     * meaning that changing a property like `translateX` won't reset `translateY`.
-     * 
-     * **Note**: For this method to work properly, all the transforms of the target elements
-     * must be transferred over to an inline `style` tag.
-     * ```js
-     * g('button').css.toInline('transform')
-     * g('button').transform('translateX', '100px')
-     * ```
-     * @param property transform function name
-     * @param value transform value
-     */
-    transform(property: keyof typeof css.transforms, value: string | number): this {
-        for (let i = 0; i < this.#items.length; i++) {
-            const item = this.#items[i] as any as HTMLElement;
-            item.style.transform = css.transforms[property](item.style.transform, value)
-        }
-        return this
-    }
-
     /** Holds various CSS manipulation methods. */
     css = {
+
+        /**
+         * Applies a transform function to all selected elements.
+         * Unlike `element.style.transform`, it does not affect the already existing transforms,
+         * meaning that changing a property like `translateX` won't reset `translateY`.
+         * 
+         * **Note**: For this method to work properly, all the transforms of the target elements
+         * must be transferred over to an inline `style` tag.
+         * ```js
+         * g('button').css.toInline('transform')
+         * g('button').transform('translateX', '100px')
+         * ```
+         * @param property transform function name
+         * @param value transform value
+         */
+        transform: (property: keyof typeof css.transforms, value: string | number): this => {
+            for (let i = 0; i < this.#items.length; i++) {
+                const item = this.#items[i] as any as HTMLElement;
+                item.style.transform = css.transforms[property](item.style.transform, value)
+            }
+            return this
+        },
 
         /**
          * Transfers the specified computed CSS styles of the target element into it's inline
@@ -423,6 +440,5 @@ class GildedInstance<E extends Element> {
         }
 
     }
-
 
 }
