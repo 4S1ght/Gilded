@@ -100,7 +100,7 @@ export declare namespace g {
 const math = {
 
     /**
-     * Returns random number within boundaries set by `min` and `max`.
+     * Returns a random number within boundaries set by `min` and `max`.
      */
     rand: (min: number, max: number) => 
         Math.floor(Math.random() * (max - min + 1) + min),
@@ -117,7 +117,6 @@ const math = {
         return x / numbers.length
     },
 
-
     /**
      * Caps the value in a range specified by `min` and `max`.
      * ```js
@@ -130,9 +129,10 @@ const math = {
         value < min ? min : value > max ? max : value,
 
     /**
-     * Returns a transition value between two numbers based on time `t`.
+     * Takes the time `t` and maps it onto a transition between `from` and `to`.
      * ```js
-     * m.slide(0.5, 20, 70) // -> 45
+     * m.slide(0.5, 20, 70)  // -> 45
+     * m.slide(0.5, 0, -100) // -> -50
      * ```
      */
     slide: (t: number, from: number, to: number): number => 
@@ -196,9 +196,8 @@ const math = {
      * m.hexTransform(0.5, '#000000ff', '#ffffff00') // #80808080
      * 
      * // Mixing:
-     * // If one of the parameters is an alpha channel, the other one will also be 
-     * // treated as if it had one with opacity of 1. The resulting string will also
-     * // contain the alpha channel:
+     * // If one of the parameters is an alpha channel, the other one will be treated
+     * // as if it also had an alpha channel, but with opacity set to 1.
      * m.hexTransform(0.5, '#000000aa', '#888888') // #444444d5
      * 
      * // Mixing (long & short syntax):
@@ -233,8 +232,7 @@ const math = {
      * 
      * // Mixing: 
      * // If one of the parameters is an RGBA function, the other one will also be 
-     * // treated as RGBA with opacity of 1. The resulting string will also be in 
-     * // the RGBA format.
+     * // treated as RGBA with opacity of 1.
      * m.rgbTransform(0.5, 'rgb(0, 0, 0)', 'rgba(255, 255, 255, 0)') // -> rgba(128, 128, 128, 0.5)
      * ```
      */
@@ -313,13 +311,13 @@ export declare namespace g {
     /**
      * Creates a transition of specified length (in milliseconds) and calls a callback function
      * for each animation frame. A promise is returned which can be awaited to sequence multiple 
-     * transitions, with an optional `overlap` parameter that specifies a custom resolve time
-     * to allow for overlapping transitions.
+     * transitions together, with an optional `overlap` parameter that specifies a custom resolve 
+     * time to allow for overlapping transitions.
      * ```ts
      * // Move div1 box by 100px
      * await g.transition(1000, t => div1.style.left = `${100*t}px`)
      * 
-     * // Play div2 animation once div1 is half-finished:
+     * // Resolve div1 after it's 50% done and start playing div2 immediately:
      * await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
      * await g.transition(1000,      t => div2.style.left = `${100*t}px`)
      * 
@@ -469,7 +467,7 @@ class GildedInstance<E extends Element> {
     }
 
     /**
-     * Removes one or more event listeners to all selected elements.
+     * Removes one or more event listeners from all selected elements.
      * ```js
      * g('.itemClass').off('click', callback)
      * // or
@@ -502,7 +500,7 @@ class GildedInstance<E extends Element> {
          * must be transferred over to an inline `style` tag.
          * ```js
          * g('button').css.toInline('transform')
-         * g('button').transform('translateX', '100px')
+         * g('button').css.transform('translateX', '100px')
          * ```
          * @param property transform function name
          * @param value transform value
@@ -516,7 +514,7 @@ class GildedInstance<E extends Element> {
         },
 
         /**
-         * Transfers the specified computed CSS styles of the target element into it's inline
+         * Transfers the specified computed CSS styles of the target element into its inline
          * style tag. The main use of this method is to avoid bugs when performing transform 
          * transitions on elements with external CSS styling.
          * 
@@ -525,7 +523,7 @@ class GildedInstance<E extends Element> {
          * // Transfer the computed "transform" style into the
          * // inline style tag before using "g.transform":
          * g('button').css.toInline('transform')
-         * g('button').transform('translateX', '100px')
+         * g('button').css.transform('translateX', '100px')
          * ```
          * @param properties CSS property names
          */
@@ -542,7 +540,7 @@ class GildedInstance<E extends Element> {
         },
 
         /**
-         * Sets a variable on the target elements.
+         * Sets CSS a variable on the target elements.
          * 
          * Starting double-dash (`--`) can be omitted and will be handled automatically.
          * ```jsx
