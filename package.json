@@ -1,6 +1,6 @@
 {
     "name": "gilded",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Gilded is a JS animation and styling library to add some shine to your website!",
     "main": "build/index.js",
     "types": "build/index.d.ts",
