@@ -24,6 +24,6 @@
     },
     "homepage": "https://github.com/4S1ght/Gilded#readme",
     "devDependencies": {
-        "typescript": "^5.4.5"
+        "typescript": "^5.5.2"
     }
 }

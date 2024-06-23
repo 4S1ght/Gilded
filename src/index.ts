@@ -21,15 +21,15 @@ type S<K extends Element> = K | K[] | NodeListOf<K>
 // CSS style props for .toInline()
 type CSSStyleProperty = keyof Omit<
     CSSStyleDeclaration, 
-    "getPropertyPriority" |
-    "getPropertyValue" | 
-    "item" | 
-    "removeProperty" | 
-    "setProperty" | 
-    "parentRule" | 
-    "length" |
-    typeof Symbol.iterator | 
-    number
+    "getPropertyPriority"
+    | "getPropertyValue" 
+    | "item" 
+    | "removeProperty" 
+    | "setProperty" 
+    | "parentRule" 
+    | "length"
+    | typeof Symbol.iterator 
+    | number
 >
 
 // Timing function
@@ -315,25 +315,25 @@ export declare namespace g {
      * time to allow for overlapping transitions.
      * ```ts
      * // Move div1 box by 100px
-     * await g.transition(1000, t => div1.style.left = `${100*t}px`)
+     * await g.trans(1000, t => div1.style.left = `${100*t}px`)
      * 
      * // Resolve div1 after it's 50% done and start playing div2 immediately:
-     * await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
-     * await g.transition(1000,      t => div2.style.left = `${100*t}px`)
+     * await g.trans(1000, 500, t => div1.style.left = `${100*t}px`)
+     * await g.trans(1000,      t => div2.style.left = `${100*t}px`)
      * 
      * // Apply an easing function:
-     * await g.transition(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+     * await g.trans(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
      * 
      * // Combine easing with overlaps:
-     * await g.transition(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
-     * await g.transition(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
+     * await g.trans(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+     * await g.trans(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
      * 
      * ```
      */
-    function transition(duration: number,                  cb: EasingCallback): Promise<void>
-    function transition(duration: number, overlap: number, cb: EasingCallback): Promise<void>
-    function transition(duration: number, f: EasingFunc,   cb: EasingCallback): Promise<void>
-    function transition(duration: number, overlap: number, f: EasingFunc, cb: EasingCallback): Promise<void>
+    function tr(duration: number,                  cb: EasingCallback): Promise<void>
+    function tr(duration: number, overlap: number, cb: EasingCallback): Promise<void>
+    function tr(duration: number, f: EasingFunc,   cb: EasingCallback): Promise<void>
+    function tr(duration: number, overlap: number, f: EasingFunc, cb: EasingCallback): Promise<void>
 }
 
 function transition(...params: (number|EasingFunc|EasingCallback)[]): Promise<void> {
@@ -374,7 +374,7 @@ function transition(...params: (number|EasingFunc|EasingCallback)[]): Promise<vo
     })
 }
 
-g.transition = transition
+g.tr = transition
 
 
 // Instance ===================================================================

@@ -22,7 +22,7 @@ import g from "gilded"
 # Docs
 
 - [Static methods](#static-methods)
-    - [transition](#transition)
+    - [transition](#gtr)
     - [time](#gtime)
     - [math](#gtransition)
         - [rand](#gmrand)
@@ -49,25 +49,25 @@ import g from "gilded"
 
 # Static methods
 
-## `g.transition()`
+## `g.tr()`
 Creates a transition of specified length (in milliseconds) and calls a callback function
-for each animation frame. A promise is returned which can be awaited to sequence multiple 
+for each animation frame. A promise is returned and can be awaited to sequence multiple 
 transitions together, with an optional `overlap` parameter that specifies a custom resolve time
 to allow for overlapping transitions.
 ```ts
 // Move div1 box by 100px
-await g.transition(1000, t => div1.style.left = `${100*t}px`)
+await g.tr(1000, t => div1.style.left = `${100*t}px`)
 
-// Resolve div1 after it's 50% done and start playing div2 immediately:
-await g.transition(1000, 500, t => div1.style.left = `${100*t}px`)
-await g.transition(1000,      t => div2.style.left = `${100*t}px`)
+// Resolve div1 after it's just 50% done and start playing div2 immediately:
+await g.tr(1000, 500, t => div1.style.left = `${100*t}px`)
+await g.tr(1000,      t => div2.style.left = `${100*t}px`)
 
 // Apply an easing function:
-await g.transition(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+await g.tr(1000, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
 
 // Combine easing with overlaps:
-await g.transition(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
-await g.transition(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
+await g.tr(1000, 300, g.f.easeInQuad, t => div1.style.left = `${100*t}px`)
+await g.tr(1000,      g.f.easeInQuad, t => div2.style.left = `${100*t}px`)
 
 ```
 
@@ -181,7 +181,7 @@ m.rgbTransform(0.5, 'rgb(0, 0, 0)', 'rgba(255, 255, 255, 0)') // -> rgba(128, 12
 ```
 
 ## Easing
-The easing object accessible under the letter `f` contains a ready to use list of animation timing functions.
+Gilded exports a set of easing functions letting you change the behavior of a transition.
 
 Available methods include:
 
@@ -214,11 +214,11 @@ g.transition(1000, eox, t => button.style.left = `${t*100}px`)
 
 # Dynamic methods
 The dynamic methods are accessible only after instantiating a `Gilded` selector.
-That's because these methods aren't simple utility functions. Instead, they all produce side-effects
-on the selected DOM elements, such as manipulating classes, styles and CSS variables.
+That's because these methods aren't simple utility functions. They all produce side-effects
+on the selected DOM elements. They manipulate element classes, styles and CSS variables.
 
 You can easily select a number of items like you would when using JQuery.
-Additionally, type-safety is provided for all known HTML and SVG element tags like `button`, `input`, `clipPath` or `circle`:
+Additionally, type-safety is provided for all known HTML and SVG element tags like `button`, `input`, `clipPath`, `circle`, etc:
 ```js
 const inputs = g('input')
 for (let input of inputs) {
