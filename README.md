@@ -129,10 +129,13 @@ m.toHex(128) // -. 80
 ```
 
 ### `g.m.hexToRgb()`
-Takes a hex color code and converts it into the RGB CSS function format.
+Takes a hex color code and converts it into the RGB CSS function format.  
+Long & shorthand syntax is supported.
 ```js
 m.hexToRGB('#4cddca')   // -> rgb(75, 221, 201) 
-m.hexToRGB('#4cddca88') // -> rgba(75, 221, 201, 0.5) 
+m.hexToRGB('#4cddca80') // -> rgba(75, 221, 201, 0.5) 
+m.hexToRGB('#fff')      // -> rgb(255, 255, 255) 
+m.hexToRGB('#fff8')     // -> rgba(255, 255, 255, 0.53) 
 ``` 
 
 ### `g.m.rgbToHex()`
@@ -147,21 +150,21 @@ Returns a transition value between two hex color codes based on the progress `t`
 Both long and shorthand hex codes are supported, as well as alpha values.
 ```js
 // Using long syntax
-m.hexTransform(0.5, '#000000', '#ffffff') // #808080
+m.hexTransform(0.5, '#000000', '#ffffff') // -> #808080
 
 // Using shorthand syntax:
-m.hexTransform(0.5, '#000', '#fff') // #808080
+m.hexTransform(0.5, '#000', '#fff') // -> #808080
 
 // Using alpha channel:
-m.hexTransform(0.5, '#000000ff', '#ffffff00') // #80808080
+m.hexTransform(0.5, '#000000ff', '#ffffff00') // -> #80808080
 
 // Mixing:
 // If one of the parameters is an alpha channel, the other one will be treated
 // as if it also had an alpha channel, but with opacity set to 1.
-m.hexTransform(0.5, '#000000aa', '#888888') // #444444d5
+m.hexTransform(0.5, '#000000aa', '#888888') // -> #444444d5
 
 // Mixing (long & short syntax):
-m.hexTransform(0.5, '#0004', '#888888') // #444444a2
+m.hexTransform(0.5, '#0004', '#888888') // -> #444444a2
 ```
 
 ### `g.m.rgbTransform()`
