@@ -153,20 +153,25 @@ const math = {
 
     /**
      * Takes a hex color code and converts it into the RGB CSS function format.
+     * Long & shorthand syntax is supported.
      * ```js
      * m.hexToRGB('#4cddca')   // -> rgb(75, 221, 201) 
-     * m.hexToRGB('#4cddca88') // -> rgba(75, 221, 201, 0.5) 
+     * m.hexToRGB('#4cddca80') // -> rgba(75, 221, 201, 0.5) 
+     * m.hexToRGB('#fff')        // -> rgb(255, 255, 255) 
+     * m.hexToRGB('#fff8')       // -> rgba(255, 255, 255, 0.53) 
      * ``` 
      */
     hexToRgb: (hex: string): string => {
-        // Remove potential hash at the start of the color code
-        if (hex[0] === '#') hex = hex.substring(1)
-    
-        let hexParts = hex.match(/.{1,2}/g) as RegExpMatchArray
-        let hexPartsNum: (number|string)[] = []
-        for (let i = 0; i < 3; i++) hexPartsNum[i] = parseInt(hexParts[i], 16)
-        if (hexParts.length === 4) hexPartsNum[3] = (parseInt(hexParts[3]) / 255).toString().substring(0,5)
-        return hexPartsNum.length === 3 ? `rgb(${hexPartsNum.join(', ')})` : `rgba(${hexPartsNum.join(', ')})`
+
+        const match = toLongHex(hex).match(REG_HEX_REGULAR) as RegExpMatchArray
+        const v: number[] = []
+
+        for (let i = 1; i < 4; i++) v.push(parseInt(match[i], 16))
+        
+        return hex.length === 5 || hex.length === 9 
+            ? `rgba(${v[0]}, ${v[1]}, ${v[2]}, ${parseInt(match[4], 16) / 255})`
+            : `rgb(${v.join(', ')})`
+
     },
 
     /**
