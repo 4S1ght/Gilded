@@ -155,8 +155,8 @@ const math = {
      * Takes a hex color code and converts it into the RGB CSS function format.
      * Long & shorthand syntax is supported.
      * ```js
-     * m.hexToRGB('#4cddca')   // -> rgb(75, 221, 201) 
-     * m.hexToRGB('#4cddca80') // -> rgba(75, 221, 201, 0.5) 
+     * m.hexToRGB('#4cddca')     // -> rgb(75, 221, 201) 
+     * m.hexToRGB('#4cddca80')   // -> rgba(75, 221, 201, 0.5) 
      * m.hexToRGB('#fff')        // -> rgb(255, 255, 255) 
      * m.hexToRGB('#fff8')       // -> rgba(255, 255, 255, 0.53) 
      * ``` 
