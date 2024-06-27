@@ -43,6 +43,7 @@ import g from "gilded"
     - [on](#gon)
     - [off](#goff)
     - [css](#css)
+        - [transform](#gcssstyle)
         - [transform](#gcsstransform)
         - [toInline](#gcsstoInline)
         - [var](#gcssvar)
@@ -291,6 +292,13 @@ g('button').off(['mouseenter', 'mouseleave'], callback)
 
 ## CSS
 The `css` Object holds various CSS manipulation methods.
+
+### `g().css.style()`
+Applies an inline CSS property to every selected element.
+```js
+g('button').css.style('color', '#000')
+g('button').css.style('border-radius', '10px')
+```
 
 ### `g().css.transform()`
 Applies a transform function to all selected elements.

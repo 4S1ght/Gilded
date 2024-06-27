@@ -498,6 +498,21 @@ class GildedInstance<E extends Element> {
     css = {
 
         /**
+         * Applies an inline CSS property to every selected element.
+         * ```js
+         * g('button').css.style('color', '#000')
+         * g('button').css.style('border-radius', '10px')
+         * ```
+         */
+        style: (property: CSSStyleProperty, value: string | number): GildedInstance<E> => {
+            for (let i = 0; i < this.#items.length; i++) {
+                const item = this.#items[i] as any as HTMLElement;
+                item.style[property] = value as string
+            }
+            return this
+        },
+
+        /**
          * Applies a transform function to all selected elements.
          * Unlike `element.style.transform`, it does not affect the already existing transforms,
          * meaning that changing a property like `translateX` won't reset `translateY`.
