@@ -74,6 +74,7 @@ export function g<K extends Element>                        (selector: S<K>): Gi
 export function g<K extends keyof HTMLElementTagNameMap>    (selector: K):    GildedInstance<HTMLElementTagNameMap[K]>;
 export function g<K extends keyof SVGElementTagNameMap>     (selector: K):    GildedInstance<SVGElementTagNameMap[K]>;
 export function g<K extends keyof MathMLElementTagNameMap>  (selector: K):    GildedInstance<MathMLElementTagNameMap[K]>;
+export function g<K extends keyof TGildedSelector>          (selector: K):    GildedInstance<Element>;
 
 export function g(selector: TGildedSelector): GildedInstance<Element> {
 
