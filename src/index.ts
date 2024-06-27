@@ -537,7 +537,7 @@ class GildedInstance<E extends Element> {
             this.#items.forEach(element => {
                 properties.forEach(prop => {
                     const value = window.getComputedStyle(element)[prop] as string
-                    if (['none', null].includes(value)) {
+                    if (!['none', null].includes(value)) {
                         (element as any as HTMLElement).style[prop] = value
                     }
                 })
