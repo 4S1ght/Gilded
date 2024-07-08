@@ -1,9 +1,10 @@
 # Gilded
-Gilded is a JS animation and styling library to add some shine to your website!
+Gilded is a tiny JS animation and styling library to add some shine to your website!
+It relies heavily on the Promise API for sequencing small atomic changes to page elements, provides methods for manipulating CSS transforms and variables, class manipulation, along with various easing functions and mathematical utility methods, such as a CSS qeuivalent `clamp` method or `rgbTransform` for color transitions.
 
 # Installation
 This is a browser (not Node.js) module and needs to be bundled with tools such as Webpack or Rollup.   
-Gilded is available on NPM:
+You cna install it like so:
 ```
 $ npm install gilded
 ```
